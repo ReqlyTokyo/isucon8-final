@@ -53,7 +53,7 @@ class IsuBank:
 
         正常に仮決済処理を行っていればここでエラーになることはありません
         """
-        executor.submit(self._request, "/commit", {"reserve_ids": reserveIDs})
+        self._request("/commit", {"reserve_ids": reserveIDs})
 
     def Cancel(self, reserveIDs: typing.List[int]):
         self._request("/cancel", {"reserve_ids": reserveIDs})
