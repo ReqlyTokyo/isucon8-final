@@ -8,7 +8,7 @@ import urllib.parse
 
 import requests
 import concurrent.futures
-executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=20)
 
 class IsubankError(Exception):
     msg = "Isubnak Error"
