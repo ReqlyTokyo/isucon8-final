@@ -73,7 +73,7 @@ def signup(db, name: str, bank_id: str, password: str):
         logging.exception(f"failed to check bank_id ({bank_id})")
         raise BankUserNotFound
 
-    hpass = bcrypt.hashpw(password.encode(), bcrypt.gensalt(10))
+    hpass = bcrypt.hashpw(password.encode(), bcrypt.gensalt(4))
 
     cur = db.cursor()
     try:
