@@ -35,7 +35,7 @@ class IsuLogger:
                 logs.append(self.queue.get())
             if logs:
                 self._request("/send_bulk", logs)
-            time.sleep(2)
+            time.sleep(3)
 
     def _request(self, path, data):
         url = urllib.parse.urljoin(self.endpoint, path)
