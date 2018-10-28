@@ -51,26 +51,10 @@ def get_latest_trade(db) -> typing.Optional[Trade]:
     return _get_trade(db, "SELECT * FROM trade ORDER BY id DESC LIMIT 1")
 
 
-def get_candlestic_data(db, mt: datetime, tf: str) -> typing.List[CandlestickData]:
-    query = """
-        SELECT m.t, a.price, b.price, m.h, m.l
-        FROM (
-            SELECT
-                STR_TO_DATE(DATE_FORMAT(created_at, %s), %s) AS t,
-                MIN(id) AS min_id,
-                MAX(id) AS max_id,
-                MAX(price) AS h,
-                MIN(price) AS l
-            FROM trade
-            WHERE created_at >= %s
-            GROUP BY t
-        ) m
-        JOIN trade a ON a.id = m.min_id
-        JOIN trade b ON b.id = m.max_id
-        ORDER BY m.t
-    """
+def get_candlestic_data(db, mt: datetime, window: str) -> typing.List[CandlestickData]:
+    tf = _get_time_format(window)
     cur = db.cursor()
-    cur.execute(query, (tf, "%Y-%m-%d %H:%i:%s", mt))
+    cur.execute(f"SELECT time, first, last, high, low FROM candlestick_{window} WHERE time >= %s", (mt,))
     return [CandlestickData(*r) for r in cur]
 
 
@@ -124,6 +108,8 @@ def _commit_reserved_order(
         (order.amount, order.price),
     )
     trade_id = cur.lastrowid
+    trade = get_trade_by_id(db, trade_id)
+
     settings.send_log(
         db,
         "trade",
@@ -146,6 +132,22 @@ def _commit_reserved_order(
                 "trade_id": trade_id,
             },
         )
+
+    for window in ('sec', 'min', 'hour'):
+        query = f"""
+                INSERT INTO `candlestick_{window}`
+                VALUES
+                    (DATE_FORMAT(%s, %s), %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    first = LEAST(first, %s),
+                    last = GREATEST(last, %s),
+                    high = GREATEST(high, %s),
+                    low = LEAST(low, %s)
+            """
+        tf = _get_time_format(window)
+        cur.execute(query, (trade.created_at, tf,
+                            trade_id, trade_id, order.price, order.price,
+                            trade_id, trade_id, order.price, order.price))
 
     bank = settings.get_isubank(db)
     bank.Commit(reserve_ids)
@@ -241,3 +243,37 @@ def run_trade(db):
 
     # 個数が不足していて不成立
     return
+
+
+def _get_time_format(window):
+    assert window in ('sec', 'min', 'hour')
+    return {
+        "sec": "%Y-%m-%d %H:%i:%s",
+        "min": "%Y-%m-%d %H:%i:00",
+        "hour": "%Y-%m-%d %H:00:00",
+    }[window]
+
+
+def init_candlestick(db):
+    cur = db.cursor()
+    for window in ( 'sec', 'min', 'hour'):
+        cur.execute(f"DELETE FROM candlestick_{window}")
+        query = f"""
+            INSERT INTO candlestick_{window} (`time`, `first`, `last`, `high`, `low`)
+            SELECT m.t, a.price, b.price, m.h, m.l
+            FROM (
+                SELECT
+                    STR_TO_DATE(DATE_FORMAT(created_at, %s), %s) AS t,
+                    MIN(id) AS min_id,
+                    MAX(id) AS max_id,
+                    MAX(price) AS h,
+                    MIN(price) AS l
+                FROM trade
+                GROUP BY t
+            ) m
+            JOIN trade a ON a.id = m.min_id
+            JOIN trade b ON b.id = m.max_id
+            ORDER BY m.t
+        """
+        tf = _get_time_format(window)
+        cur.execute(query, (tf, "%Y-%m-%d %H:%i:%s"))
