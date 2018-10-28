@@ -148,7 +148,7 @@ def _commit_reserved_order(
         )
 
     bank = settings.get_isubank(db)
-    threading.Thread(target=bank.Commit, args=(reserve_ids,))
+    bank.Commit(reserve_ids)
 
 
 def try_trade(db, order_id: int):
