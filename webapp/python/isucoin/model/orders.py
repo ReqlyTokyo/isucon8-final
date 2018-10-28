@@ -106,7 +106,7 @@ def get_order_by_id(db, id: int) -> Order:
 
 def get_order_by_id_with_lock(db, id: int) -> Order:
     order = _get_one_order(db, "SELECT * FROM orders WHERE id = %s FOR UPDATE", id)
-    order.user = users.get_user_by_id_with_lock(db, order.user_id)
+    order.user = users.get_user_by_id(db, order.user_id)
     return order
 
 

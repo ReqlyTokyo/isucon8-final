@@ -12,6 +12,7 @@ import flask
 import MySQLdb
 import rapidjson
 from collections import defaultdict
+import threading
 
 from . import model
 
@@ -280,7 +281,7 @@ def add_order():
     trade_chance = model.has_trade_chance_by_order(db, order.id)
     if trade_chance:
         try:
-            model.run_trade(db)
+            threading.Thread(target=model.run_trade, args=(db,))
         except Exception:  # トレードに失敗してもエラーにはしない
             app.logger.exception("run_trade failed")
 
