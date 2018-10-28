@@ -9,6 +9,7 @@ BANK_APPID = "bank_appid"
 LOG_ENDPOINT = "log_endpoint"
 LOG_APPID = "log_appid"
 
+global_logger = None
 
 def set_setting(db, k: str, v: str):
     cur = db.cursor()
@@ -31,10 +32,12 @@ def get_isubank(db):
 
 
 def get_logger(db):
-    endpoint = get_setting(db, LOG_ENDPOINT)
-    appid = get_setting(db, LOG_APPID)
-    return isulogger.IsuLogger(endpoint, appid)
-
+    global global_logger
+    if global_logger is None:
+        endpoint = get_setting(db, LOG_ENDPOINT)
+        appid = get_setting(db, LOG_APPID)
+        global_logger = isulogger.IsuLogger(endpoint, appid)
+    return global_logger
 
 def send_log(db, tag, v):
     logger = get_logger(db)
