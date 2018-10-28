@@ -13,7 +13,7 @@ import MySQLdb
 import rapidjson
 from collections import defaultdict
 import concurrent.futures
-executor = concurrent.futures.ThreadPoolExecutor(max_workers=20)
+#executor = concurrent.futures.ThreadPoolExecutor(max_workers=20)
 
 from . import model
 
