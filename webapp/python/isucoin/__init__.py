@@ -207,11 +207,6 @@ def info():
 
     user = flask.g.current_user
     if user:
-        # orders = model.get_orders_by_userid_and_lasttradeid(db, user.id, last_trade_id)
-        # for o in orders:
-        #     model.fetch_order_relation(db, o)
-
-        # res["traded_orders"] = orders
         res["traded_orders"] = model.get_orders_by_userid_and_lasttradeid(db, user.id, last_trade_id)
 
     from_t = base_time - datetime.timedelta(seconds=300)
@@ -252,8 +247,6 @@ def orders():
 
     db = get_dbconn()
     orders = model.get_orders_by_userid(db, user.id)
-    # for o in orders:
-    #     model.fetch_order_relation(db, o)
 
     return jsonify(orders)
 
