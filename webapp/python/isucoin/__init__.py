@@ -221,7 +221,7 @@ def info():
     from_t = base_time - datetime.timedelta(minutes=300)
     if lt and lt > from_t:
         from_t = lt.replace(second=0, microsecond=0)
-    res["chart_by_min"] = model.get_candlestic_data(db, from_t, windo="min")
+    res["chart_by_min"] = model.get_candlestic_data(db, from_t, window="min")
 
     from_t = base_time - datetime.timedelta(hours=48)
     if lt and lt > from_t:
