@@ -16,6 +16,7 @@ class IsuLogger:
         self.endpoint = endpoint
         self.appID = appID
         self.queue = Queue()
+        self.logs = []
         self.thread = threading.Thread(target=self._send_bulk)
         self.thread.start()
 
@@ -30,12 +31,16 @@ class IsuLogger:
 
     def _send_bulk(self):
         while True:
-            logs = []
             while not self.queue.empty():
-                logs.append(self.queue.get())
-            if logs:
-                self._request("/send_bulk", logs)
-            time.sleep(5)
+                self.logs.append(self.queue.get())
+            if self.logs:
+                try:
+                    self._request("/send_bulk", self.logs)
+                except Exception:
+                    pass
+                else:
+                    self.logs = []
+            time.sleep(3)
 
     def _request(self, path, data):
         url = urllib.parse.urljoin(self.endpoint, path)
