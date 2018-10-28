@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import time
 import urllib.parse
+import sys
 
 import requests
 import threading
@@ -36,11 +37,11 @@ class IsuLogger:
             if self.logs:
                 try:
                     self._request("/send_bulk", self.logs)
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"Catch bulk error {e}", file=sys.stderr)
                 else:
                     self.logs = []
-            time.sleep(3)
+            time.sleep(2)
 
     def _request(self, path, data):
         url = urllib.parse.urljoin(self.endpoint, path)
