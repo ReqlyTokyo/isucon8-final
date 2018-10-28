@@ -5,7 +5,7 @@ from dataclasses import dataclass, asdict
 import isubank
 
 from . import settings, orders
-
+import threading
 
 class NoOrderForTrade(Exception):
     msg = "no order for trade"
@@ -148,7 +148,7 @@ def _commit_reserved_order(
         )
 
     bank = settings.get_isubank(db)
-    bank.Commit(reserve_ids)
+    threading.Thread(target=bank.Commit, args=(reserve_ids,))
 
 
 def try_trade(db, order_id: int):
