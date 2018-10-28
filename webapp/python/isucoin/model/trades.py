@@ -254,26 +254,3 @@ def _get_time_format(window):
     }[window]
 
 
-def init_candlestick(db):
-    cur = db.cursor()
-    for window in ( 'sec', 'min', 'hour'):
-        cur.execute(f"DELETE FROM candlestick_{window}")
-        query = f"""
-            INSERT INTO candlestick_{window} (`time`, `first`, `last`, `high`, `low`)
-            SELECT m.t, a.price, b.price, m.h, m.l
-            FROM (
-                SELECT
-                    STR_TO_DATE(DATE_FORMAT(created_at, %s), %s) AS t,
-                    MIN(id) AS min_id,
-                    MAX(id) AS max_id,
-                    MAX(price) AS h,
-                    MIN(price) AS l
-                FROM trade
-                GROUP BY t
-            ) m
-            JOIN trade a ON a.id = m.min_id
-            JOIN trade b ON b.id = m.max_id
-            ORDER BY m.t
-        """
-        tf = _get_time_format(window)
-        cur.execute(query, (tf, "%Y-%m-%d %H:%i:%s"))
