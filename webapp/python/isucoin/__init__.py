@@ -11,6 +11,7 @@ import time
 import flask
 import MySQLdb
 import rapidjson
+from collections import defaultdict
 
 from . import model
 
@@ -29,6 +30,9 @@ app.secret_key = "tonymoris"
 # ISUCON用初期データの基準時間です
 # この時間以降のデータはinitializeで削除されます
 base_time = datetime.datetime(2018, 10, 16, 10, 0, 0)
+
+# bank_idごとの失敗回数を記録
+bnk2cnt = defaultdict(int)
 
 _dbconn = None
 
@@ -170,8 +174,12 @@ def signin():
     db = get_dbconn()
     try:
         user = model.login(db, bank_id, password)
+        bnk2cnt[bank_id] = 0
     except model.UserNotFound as e:
         # TODO: 失敗が多いときに403を返すBanの仕様に対応
+        bnk2cnt[bank_id] += 1
+        if bnk2cnt[bank_id] >= 5:
+            return error_json(403, e.msg)
         return error_json(404, e.msg)
 
     flask.session["user_id"] = user.id
