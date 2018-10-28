@@ -7,7 +7,6 @@ import json
 import urllib.parse
 
 import requests
-import threading
 
 class IsubankError(Exception):
     msg = "Isubnak Error"
@@ -52,8 +51,13 @@ class IsuBank:
 
         正常に仮決済処理を行っていればここでエラーになることはありません
         """
-        thread = threading.Thread(target=self._request, args=("/commit", {"reserve_ids": reserveIDs}))
-        thread.start()
+        while True:
+            try:
+                self._request("/commit", {"reserve_ids": reserveIDs})
+            except Exception:
+                continue
+            else:
+                break
 
     def Cancel(self, reserveIDs: typing.List[int]):
         self._request("/cancel", {"reserve_ids": reserveIDs})

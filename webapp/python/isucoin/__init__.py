@@ -12,7 +12,8 @@ import flask
 import MySQLdb
 import rapidjson
 from collections import defaultdict
-import threading
+import concurrent.futures
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=20)
 
 from . import model
 
@@ -243,11 +244,10 @@ def info():
         res["highest_buy_price"] = highest_buy_order.price
 
     # TODO: trueにするとシェアボタンが有効になるが、アクセスが増えてヤバイので一旦falseにしておく
-    res["enable_share"] = user and user.id % 2 < 1
+    res["enable_share"] = user and user.id % 3 < 1
 
     resp = jsonify(res)
     return resp
-
 
 @app.route("/orders")
 def orders():
@@ -281,7 +281,10 @@ def add_order():
     trade_chance = model.has_trade_chance_by_order(db, order.id)
     if trade_chance:
         try:
-            threading.Thread(target=model.run_trade, args=(db,))
+            model.run_trade(db)
+            #thread = threading.Thread(target=model.run_trade, args=(db,))
+            #thread.start()
+            #executor.submit(model.run_trade, db)
         except Exception:  # トレードに失敗してもエラーにはしない
             app.logger.exception("run_trade failed")
 
