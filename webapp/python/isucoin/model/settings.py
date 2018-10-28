@@ -18,7 +18,6 @@ def set_setting(db, k: str, v: str):
         (k, v),
     )
 
-
 def get_setting(db, k: str) -> str:
     cur = db.cursor()
     cur.execute("SELECT val FROM setting WHERE name = %s LIMIT 1", (k,))
@@ -30,13 +29,16 @@ def get_isubank(db):
     appid = get_setting(db, BANK_APPID)
     return isubank.IsuBank(endpoint, appid)
 
+def set_isulogger(db):
+    global global_logger
+    endpoint = get_setting(db, LOG_ENDPOINT)
+    appid = get_setting(db, LOG_APPID)
+    global_logger = isulogger.IsuLogger(endpoint, appid)
 
 def get_logger(db):
     global global_logger
     if global_logger is None:
-        endpoint = get_setting(db, LOG_ENDPOINT)
-        appid = get_setting(db, LOG_APPID)
-        global_logger = isulogger.IsuLogger(endpoint, appid)
+        set_isulogger(db)
     return global_logger
 
 def send_log(db, tag, v):
