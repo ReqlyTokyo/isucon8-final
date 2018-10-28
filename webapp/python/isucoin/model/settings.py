@@ -40,7 +40,7 @@ def init_isulogger(db):
 def get_logger(db):
     global global_logger
     if global_logger is None:
-        set_isulogger(db)
+        init_isulogger(db)
     return global_logger
 
 def send_log(db, tag, v):
