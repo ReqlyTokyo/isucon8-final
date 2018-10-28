@@ -7,8 +7,7 @@ import json
 import urllib.parse
 
 import requests
-import concurrent.futures
-executor = concurrent.futures.ThreadPoolExecutor(max_workers=20)
+import threading
 
 class IsubankError(Exception):
     msg = "Isubnak Error"
@@ -53,7 +52,8 @@ class IsuBank:
 
         正常に仮決済処理を行っていればここでエラーになることはありません
         """
-        self._request("/commit", {"reserve_ids": reserveIDs})
+        thread = threading.Thread(target=self._request, args=("/commit", {"reserve_ids": reserveIDs}))
+        thread.start()
 
     def Cancel(self, reserveIDs: typing.List[int]):
         self._request("/cancel", {"reserve_ids": reserveIDs})
