@@ -8,22 +8,34 @@ import time
 import urllib.parse
 
 import requests
-
+import threading
+import queue import Queue
 
 class IsuLogger:
     def __init__(self, endpoint, appID):
         self.endpoint = endpoint
         self.appID = appID
+        self.queue = Queue()
+        self.thread = threading.Thread(target=self._send_bulk)
+        self.thread.start()
 
     def send(self, tag, data):
-        self._request(
-            "/send",
+        self.queue.put(
             {
                 "tag": tag,
                 "time": time.strftime("%Y-%m-%dT%H:%M:%S+09:00"),
                 "data": data,
-            },
+            }
         )
+
+    def _send_bulk(self):
+        while True:
+            logs = []
+            while not self.queue.empty():
+                logs.append(self.queue.get())
+            if logs:
+                self._request("/send_bulk", logs)
+            time.sleep(1)
 
     def _request(self, path, data):
         url = urllib.parse.urljoin(self.endpoint, path)
