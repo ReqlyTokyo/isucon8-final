@@ -29,11 +29,13 @@ def get_isubank(db):
     appid = get_setting(db, BANK_APPID)
     return isubank.IsuBank(endpoint, appid)
 
-def set_isulogger(db):
+
+def init_isulogger(db):
     global global_logger
     endpoint = get_setting(db, LOG_ENDPOINT)
     appid = get_setting(db, LOG_APPID)
     global_logger = isulogger.IsuLogger(endpoint, appid)
+
 
 def get_logger(db):
     global global_logger
