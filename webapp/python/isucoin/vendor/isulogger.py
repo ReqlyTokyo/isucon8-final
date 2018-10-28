@@ -29,7 +29,7 @@ class IsuLogger:
         )
 
     def _send_bulk(self):
-        while not self.stop_event.is_set():
+        while True:
             logs = []
             while not self.queue.empty():
                 logs.append(self.queue.get())
