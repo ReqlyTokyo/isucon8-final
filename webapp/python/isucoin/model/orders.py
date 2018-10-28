@@ -137,7 +137,7 @@ def get_highest_buy_order(db) -> Order:
 def add_order(db, ot: str, user_id: int, amount: int, price: int) -> Order:
     if amount <= 0 or price <= 0:
         raise ValueError
-    user = users.get_user_by_id_with_lock(db, user_id)
+    user = users.get_user_by_id(db, user_id)
 
     bank = settings.get_isubank(db)
 
