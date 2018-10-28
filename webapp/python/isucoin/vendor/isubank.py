@@ -8,7 +8,7 @@ import urllib.parse
 
 import requests
 import concurrent.futures
-executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=20)
 
 class IsubankError(Exception):
     msg = "Isubnak Error"
@@ -53,7 +53,7 @@ class IsuBank:
 
         正常に仮決済処理を行っていればここでエラーになることはありません
         """
-        executor.submit(self._request, "/commit", {"reserve_ids": reserveIDs})
+        self._request("/commit", {"reserve_ids": reserveIDs})
 
     def Cancel(self, reserveIDs: typing.List[int]):
         self._request("/cancel", {"reserve_ids": reserveIDs})

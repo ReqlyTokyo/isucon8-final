@@ -9,7 +9,7 @@ import urllib.parse
 
 import requests
 import threading
-import queue import Queue
+from queue import Queue
 
 class IsuLogger:
     def __init__(self, endpoint, appID):
