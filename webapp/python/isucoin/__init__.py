@@ -11,6 +11,8 @@ import time
 import flask
 import MySQLdb
 import rapidjson
+from collections import defaultdict
+import threading
 
 from . import model
 
@@ -29,6 +31,9 @@ app.secret_key = "tonymoris"
 # ISUCON用初期データの基準時間です
 # この時間以降のデータはinitializeで削除されます
 base_time = datetime.datetime(2018, 10, 16, 10, 0, 0)
+
+# bank_idごとの失敗回数を記録
+bnk2cnt = defaultdict(int)
 
 _dbconn = None
 
@@ -170,8 +175,12 @@ def signin():
     db = get_dbconn()
     try:
         user = model.login(db, bank_id, password)
+        bnk2cnt[bank_id] = 0
     except model.UserNotFound as e:
         # TODO: 失敗が多いときに403を返すBanの仕様に対応
+        bnk2cnt[bank_id] += 1
+        if bnk2cnt[bank_id] >= 5:
+            return error_json(403, e.msg)
         return error_json(404, e.msg)
 
     flask.session["user_id"] = user.id
@@ -208,9 +217,6 @@ def info():
     user = flask.g.current_user
     if user:
         orders = model.get_orders_by_userid_and_lasttradeid(db, user.id, last_trade_id)
-        for o in orders:
-            model.fetch_order_relation(db, o)
-
         res["traded_orders"] = orders
 
     from_t = base_time - datetime.timedelta(seconds=300)
@@ -237,7 +243,7 @@ def info():
         res["highest_buy_price"] = highest_buy_order.price
 
     # TODO: trueにするとシェアボタンが有効になるが、アクセスが増えてヤバイので一旦falseにしておく
-    res["enable_share"] = user and user.id % 10 < 1
+    res["enable_share"] = user and user.id % 2 < 1
 
     resp = jsonify(res)
     return resp
@@ -251,8 +257,6 @@ def orders():
 
     db = get_dbconn()
     orders = model.get_orders_by_userid(db, user.id)
-    for o in orders:
-        model.fetch_order_relation(db, o)
 
     return jsonify(orders)
 
@@ -277,7 +281,7 @@ def add_order():
     trade_chance = model.has_trade_chance_by_order(db, order.id)
     if trade_chance:
         try:
-            model.run_trade(db)
+            threading.Thread(target=model.run_trade, args=(db,))
         except Exception:  # トレードに失敗してもエラーにはしない
             app.logger.exception("run_trade failed")
 
