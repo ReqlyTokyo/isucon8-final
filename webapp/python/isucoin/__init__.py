@@ -12,7 +12,8 @@ import flask
 import MySQLdb
 import rapidjson
 from collections import defaultdict
-import threading
+import concurrent.futures
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=20)
 
 from . import model
 
@@ -284,6 +285,7 @@ def add_order():
             model.run_trade(db)
             #thread = threading.Thread(target=model.run_trade, args=(db,))
             #thread.start()
+            executor.submit(model.run_trade, db)
         except Exception:  # トレードに失敗してもエラーにはしない
             app.logger.exception("run_trade failed")
 
