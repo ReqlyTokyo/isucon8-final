@@ -174,8 +174,8 @@ def add_order(db, ot: str, user_id: int, amount: int, price: int) -> Order:
 
 
 def delete_order(db, user_id: int, order_id: int, reason: str):
-    user = users.get_user_by_id_with_lock(db, user_id)
     order = get_order_by_id_with_lock(db, order_id)
+    user = users.get_user_by_id_with_lock(db, user_id)
 
     if order is None:
         raise OrderNotFound
