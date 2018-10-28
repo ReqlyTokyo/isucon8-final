@@ -281,8 +281,9 @@ def add_order():
     trade_chance = model.has_trade_chance_by_order(db, order.id)
     if trade_chance:
         try:
-            thread = threading.Thread(target=model.run_trade, args=(db,))
-            thread.start()
+            model.run_trade(db)
+            #thread = threading.Thread(target=model.run_trade, args=(db,))
+            #thread.start()
         except Exception:  # トレードに失敗してもエラーにはしない
             app.logger.exception("run_trade failed")
 
