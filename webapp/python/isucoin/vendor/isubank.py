@@ -54,9 +54,10 @@ class IsuBank:
         while True:
             try:
                 self._request("/commit", {"reserve_ids": reserveIDs})
-                break
             except Exception:
                 continue
+            else:
+                break
 
     def Cancel(self, reserveIDs: typing.List[int]):
         self._request("/cancel", {"reserve_ids": reserveIDs})
